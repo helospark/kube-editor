@@ -1,0 +1,14 @@
+apiVersion: app/v1
+kind: Ingress
+metadata:
+  name: replaceme-ingress
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+        - path: /replaceme
+          backend:
+            serviceName: replaceme-service
+            servicePort: 8080
