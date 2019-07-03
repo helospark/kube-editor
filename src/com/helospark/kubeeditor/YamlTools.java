@@ -129,6 +129,9 @@ public class YamlTools {
         if (nextIndex == -1) {
             nextIndex = content.length();
         }
+        if (prevIndex == -1) {
+            prevIndex = 0;
+        }
         if (content.length() == 0) {
             return true;
         }

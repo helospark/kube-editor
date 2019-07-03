@@ -19,6 +19,8 @@ import org.eclipse.jface.text.templates.TemplateCompletionProcessor;
 import org.eclipse.jface.text.templates.TemplateContextType;
 import org.eclipse.swt.graphics.Image;
 
+import com.helospark.kubeeditor.valueprovider.StaticValueProviderList;
+
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.Schema;
@@ -59,6 +61,7 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
 
         Optional<String> currentKey = YamlTools.currentKey(content, offset);
         Optional<String> currentValue = YamlTools.currentValue(content, offset);
+        String valueOrEmptyString = currentValue.orElse("");
         Optional<Integer> currentSpaces = YamlTools.currentSpaces(content, offset);
         if (!isValue) {
             if (!apiVersion.isPresent()) {
@@ -73,13 +76,19 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
             }
         }
 
+        if (isValue) {
+            result.addAll(StaticValueProviderList.validValues(path, currentValue)
+                    .stream()
+                    .map(a -> createProposalCustom(offset, a, a, a, valueOrEmptyString))
+                    .collect(Collectors.toList()));
+        }
+
         Optional<Schema> optionalSchema = YamlTools.findSchemaForPath(path, content, offset);
 
         if (optionalSchema.isPresent()) {
             Schema schema = optionalSchema.get();
             if (isValue) {
                 String type = optionalSchema.get().getType();
-                String valueOrEmptyString = currentValue.orElse("");
 
                 if (type.equals("boolean")) {
                     if ("true".startsWith(valueOrEmptyString)) {
