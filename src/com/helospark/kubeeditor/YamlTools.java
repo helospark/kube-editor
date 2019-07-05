@@ -354,7 +354,7 @@ public class YamlTools {
         if (lastLineStartPosition == -1) {
             return true;
         }
-        String lastLine = content.substring(lastLineStartPosition, nextNewLineLocation);
+        String lastLine = content.substring(nextNewLineLocation, lastLineStartPosition);
         return lastLine.startsWith("---") || lastLine.startsWith("...");
     }
 
