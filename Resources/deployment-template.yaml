@@ -6,9 +6,6 @@ metadata:
     app: replaceme
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: replaceme
   template:
     metadata:
       labels:

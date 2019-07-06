@@ -13,8 +13,8 @@ public class StaticValueProviderList {
         validValueProviders.add(new ApiVersionProvider());
         validValueProviders.add(new KindProvider());
         validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "ports", "protocol"), Arrays.asList("TCP", "UDP", "SCTP")));
+        validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "template", "spec", "containers", "ports", "protocol"), Arrays.asList("TCP", "UDP", "SCTP")));
         validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "type"), Arrays.asList("ClusterIP", "NodePort", "LoadBalancer", "ExternalName")));
-
     }
 
     public static List<String> validValues(List<String> path, Optional<String> current) {
@@ -25,7 +25,7 @@ public class StaticValueProviderList {
                 .collect(Collectors.toList());
     }
 
-    private static boolean isMatch(List<String> path, List<String> path2) {
+    public static boolean isMatch(List<String> path, List<String> path2) {
         if (path.size() != path2.size()) {
             return false;
         }

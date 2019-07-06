@@ -7,6 +7,7 @@ import static com.helospark.kubeeditor.YamlTools.isComment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -112,16 +113,22 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
                             String postFix;
                             if (offset < content.length() - 1 && content.charAt(offset + 1) == ':') {
                                 postFix = "";
-                            } else if (a.getValue().get$ref() != null || a.getValue() instanceof ArraySchema || a.getValue() instanceof MapSchema) {
+                            } else if (a.getValue().get$ref() != null || a.getValue() instanceof MapSchema) {
                                 postFix = ":\n";
                                 for (int i = 0; i < currentSpaces.map(b -> b + 2).orElse(2); ++i) {
                                     postFix += " ";
                                 }
+                            } else if (a.getValue() instanceof ArraySchema) {
+                                postFix = ":\n";
+                                for (int i = 0; i < currentSpaces.orElse(0); ++i) {
+                                    postFix += " ";
+                                }
+                                postFix += " - ";
                             } else {
                                 postFix = ": ";
                             }
                             return createProposalCustom(originalOffset, a.getKey(), a.getKey() + postFix,
-                                    a.getValue().getDescription() + "\n\nname: " + a.getKey() + "\ntype: " + a.getValue().getType(),
+                                    createDescription(a),
                                     currentKey.orElse(""));
                         })
                         .collect(Collectors.toList()));
@@ -129,6 +136,22 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
         }
 
         return result.toArray(new ICompletionProposal[0]);
+    }
+
+    private String createDescription(Entry<String, Schema> a) {
+        String result = "";
+
+        if (a.getValue().getDescription() != null) {
+            result += a.getValue().getDescription();
+        }
+
+        result += "\n\nname: " + a.getKey();
+
+        if (a.getValue().getType() != null) {
+            result += "\ntype: " + a.getValue().getType();
+        }
+
+        return result;
     }
 
     private ICompletionProposal createTemplateCustom(int offset, int originalOffset, String title, String filename, String whatToReplace, String content) {
