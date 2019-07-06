@@ -36,7 +36,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.UNDERLINE_DEFAULT, false);
 
         PreferenceConverter.setDefault(store, PreferenceConstants.COLOR_COMMENT, new RGB(255, 0, 50));
-        store.setDefault(PreferenceConstants.BOLD_COMMENT, false);
+        store.setDefault(PreferenceConstants.BOLD_COMMENT, true);
         store.setDefault(PreferenceConstants.ITALIC_COMMENT, false);
         store.setDefault(PreferenceConstants.UNDERLINE_COMMENT, false);
 
@@ -50,8 +50,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.ITALIC_DOCUMENT, false);
         store.setDefault(PreferenceConstants.UNDERLINE_DOCUMENT, false);
 
-        PreferenceConverter.setDefault(store, PreferenceConstants.COLOR_SCALAR, new RGB(141, 218, 248));
-        store.setDefault(PreferenceConstants.BOLD_SCALAR, false);
+        PreferenceConverter.setDefault(store, PreferenceConstants.COLOR_SCALAR, new RGB(110, 160, 190));
+        store.setDefault(PreferenceConstants.BOLD_SCALAR, true);
         store.setDefault(PreferenceConstants.ITALIC_SCALAR, false);
         store.setDefault(PreferenceConstants.UNDERLINE_SCALAR, false);
 

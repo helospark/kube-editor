@@ -57,9 +57,9 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
         Optional<String> kind = YamlTools.findKind(content, offset);
 
         if (YamlTools.isEmptyLine(content, offset)) {
-            result.add(createTemplateCustom(offset, originalOffset, "Create deployment", "deployment-template.yaml", YamlTools.getCurrentLine(content, offset), content));
-            result.add(createTemplateCustom(offset, originalOffset, "Service deployment", "service-template.yaml", YamlTools.getCurrentLine(content, offset), content));
-            result.add(createTemplateCustom(offset, originalOffset, "Ingress deployment", "ingress-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Deployment template", "deployment-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Service template", "service-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Ingress template", "ingress-template.yaml", YamlTools.getCurrentLine(content, offset), content));
         }
 
         Optional<String> currentKey = YamlTools.currentKey(content, offset);

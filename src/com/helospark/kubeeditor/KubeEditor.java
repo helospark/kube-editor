@@ -127,15 +127,8 @@ public class KubeEditor extends YEdit {
 
     private Map<Integer, List<String>> getErrorsFromDocument(Node element) {
         MappingNode mappingElement = (MappingNode) element;
-        //
         Optional<String> apiVersion = findScalarElement(mappingElement, "apiVersion");
         Optional<String> kind = findScalarElement(mappingElement, "kind");
-        //
-        //        Optional<String> schemaDescriptor = YamlTools.getSchemaDescriptor(apiVersion.get(), kind.get());
-        //
-        //        if (schemaDescriptor.isPresent()) {
-        //            Schema schema = api.getComponents().getSchemas().get(schemaDescriptor.get());
-        //        }
 
         List<String> path = new ArrayList<>();
 
@@ -159,6 +152,8 @@ public class KubeEditor extends YEdit {
                     putAll(result, (recursiveGetErrorsFromDocument(a.getValueNode(), path, apiVersion, kind)));
 
                     path.remove(path.size() - 1);
+                } else {
+                    putAll(result, (recursiveGetErrorsFromDocument(a.getValueNode(), path, apiVersion, kind)));
                 }
             }
         } else if (element instanceof SequenceNode) {

@@ -22,7 +22,7 @@ public class PortValidator implements FieldValueValidator {
         if (path.size() > 0) {
             String lastElement = path.get(path.size() - 1);
             return lastElement.equalsIgnoreCase("containerPort") || lastElement.equalsIgnoreCase("hostPort")
-                    || lastElement.equalsIgnoreCase("targetPort");
+                    || lastElement.equalsIgnoreCase("targetPort") || lastElement.equalsIgnoreCase("port");
         } else {
             return false;
         }

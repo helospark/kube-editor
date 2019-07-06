@@ -283,7 +283,6 @@ public class YamlTools {
                         schema = (Schema) newElement;
                     } else {
                         schema = (Schema) newElement;
-                        System.out.println("Cannot proceed with " + pathElement);
                         break;
                     }
                 }

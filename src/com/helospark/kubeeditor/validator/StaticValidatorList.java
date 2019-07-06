@@ -18,7 +18,6 @@ public class StaticValidatorList {
     }
 
     public static List<String> getValidationMessage(String type, ScalarNode node, List<String> path) {
-        System.out.println(path);
         return validators.stream()
                 .map(a -> {
                     try {

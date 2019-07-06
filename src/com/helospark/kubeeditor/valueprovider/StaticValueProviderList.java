@@ -15,6 +15,7 @@ public class StaticValueProviderList {
         validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "ports", "protocol"), Arrays.asList("TCP", "UDP", "SCTP")));
         validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "template", "spec", "containers", "ports", "protocol"), Arrays.asList("TCP", "UDP", "SCTP")));
         validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "type"), Arrays.asList("ClusterIP", "NodePort", "LoadBalancer", "ExternalName")));
+        validValueProviders.add(new SimpleMultiValueValidValueProvider(Arrays.asList("spec", "template", "spec", "containers", "imagePullPolicy"), Arrays.asList("Always", "Never", "IfNotPresent")));
     }
 
     public static List<String> validValues(List<String> path, Optional<String> current) {

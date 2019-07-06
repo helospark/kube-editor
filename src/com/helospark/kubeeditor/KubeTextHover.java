@@ -43,12 +43,7 @@ public class KubeTextHover implements ITextHover, ITextHoverExtension, ITextHove
         PreprocessedString preprocessedString = StringPreprocessor.preprocess(contentToModify, region.getOffset());
         String content = preprocessedString.content;
 
-        int offset;
-        if (region.getOffset() >= content.length()) {
-            offset = content.length() - 1;
-        } else {
-            offset = region.getOffset();
-        }
+        int offset = preprocessedString.simpleOffset;
 
         if (isComment(content, offset)) {
             return null;
