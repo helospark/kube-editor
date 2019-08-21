@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: replaceme
+  labels:
+    app: replaceme
+spec:
+  volumes:
+   - name: data
+     nfs:
+       server: replace.with.myserver.local
+       path: "/exports"
+       
+  containers:
+   - name: changeme
+     image: changeme
+     ports:
+      - containerPort: 8080
+        name: http
+        protocol: TCP
+     volumeMounts:
+      - mountPath: /data
+        name: data
+---

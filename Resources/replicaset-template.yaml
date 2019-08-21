@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
 metadata:
   name: replaceme
   labels:
@@ -7,11 +7,6 @@ metadata:
 spec:
   replicas: 1
   
-  # ReplicaSet Selector
-  selector:
-    matchLabels:
-      app: replaceme
-      
   # Pod Template
   template:
     metadata:
@@ -24,11 +19,13 @@ spec:
            claimName: data
            
       containers:
-      - name: replaceme
-        image: replaceme
-        ports:
-        - containerPort: 8080
-        volumeMounts:
-         - name: data
-           mountPath: /data
+       - image: changeme
+         name: changeme
+         ports:
+         - containerPort: 8080
+           name: http
+           protocol: TCP
+         volumeMounts:
+          - name: data
+            mountPath: /data
 ---

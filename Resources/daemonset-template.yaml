@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: replaceme
+  labels:
+    app: replaceme
+spec:
+  # Pod Template
+  template:
+    metadata:
+      labels:
+        app: replaceme
+    spec:
+      nodeSelector:
+        ssd: true
+      containers:
+       - image: changeme
+         name: changeme
+         ports:
+         - containerPort: 8080
+           name: http
+           protocol: TCP
+---

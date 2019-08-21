@@ -60,6 +60,15 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
             result.add(createTemplateCustom(offset, originalOffset, "Deployment template", "deployment-template.yaml", YamlTools.getCurrentLine(content, offset), content));
             result.add(createTemplateCustom(offset, originalOffset, "Service template", "service-template.yaml", YamlTools.getCurrentLine(content, offset), content));
             result.add(createTemplateCustom(offset, originalOffset, "Ingress template", "ingress-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Pod template", "pod-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Pod template - Detailed", "pod-detailed-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Pod (+Local Volume) template", "pod-localvol-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Pod (+NFS Volume) template", "pod-nfsvol-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "ReplicaSet template", "replicaset-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "DaemonSet template", "daemonset-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "ConfigMap template", "configmap-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "PersistentVolume (NFS) template", "persistentvol-nfs-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "PersistentVolumeClaim template", "persistentvolclaim-template.yaml", YamlTools.getCurrentLine(content, offset), content));
         }
 
         Optional<String> currentKey = YamlTools.currentKey(content, offset);

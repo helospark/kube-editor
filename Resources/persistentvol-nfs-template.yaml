@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: replaceme
+  labels:
+    ssd: true
+spec:
+  accessModes:
+   - ReadWriteMany
+  capacity:
+    storage: 10Gi
+  nfs:
+    server: replace.with.myserver.local
+    path: /exports
+---
