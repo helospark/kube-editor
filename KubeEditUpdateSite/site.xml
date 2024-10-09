@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <description name="Kubernetes manifest editor" url="http://helospark.com/eclipse_plugin/KubeEditorPlugin/">
+   <description name="Kubernetes manifest editor" url="https://raw.githubusercontent.com/helospark/eclipse-update-site/refs/heads/main/KubeEditUpdateSite">
       Kubernetes manifest editor
    </description>
-   <feature url="features/com.helospark.KubeEditorFeature_0.0.1.201906302218.jar" id="com.helospark.KubeEditorFeature" version="0.0.1.201906302218"/>
+   <feature url="features/com.helospark.KubeEditorFeature_0.0.2.202410091648.jar" id="com.helospark.KubeEditorFeature" version="0.0.2.202410091648"/>
 </site>
