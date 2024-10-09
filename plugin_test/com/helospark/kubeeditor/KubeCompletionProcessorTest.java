@@ -108,6 +108,30 @@ public class KubeCompletionProcessorTest {
     }
 
     @Test
+    public void testServiceLoadBalanderIpWithWindowsFileEndings() {
+        String testData = "" +
+                "apiVersion: v1\r\n" +
+                "kind: Service\r\n" +
+                "metadata:\r\n" +
+                "  name: my-service\r\n" +
+                "spec:\r\n" +
+                "  selector:\r\n" +
+                "    app: MyApp\r\n" +
+                "  ports:\r\n" +
+                "  - protocol: TCP\r\n" +
+                "    port: 80\r\n" +
+                "    targetPort: 9376\r\n" +
+                "  clusterIP: 10.0.171.239\r\n" +
+                "  loadBalan";
+
+        when(document.get()).thenReturn(testData);
+
+        ICompletionProposal[] proposals = underTest.computeCompletionProposals(viewer, testData.length() - 1);
+
+        assertEquals("loadBalancerIP", proposals[0].getDisplayString());
+    }
+
+    @Test
     public void testServiceList() {
         String testData = "" +
                 "apiVersion: v1\n" +
@@ -137,6 +161,25 @@ public class KubeCompletionProcessorTest {
                 "spec:\n" +
                 "  selector:\n" +
                 "    app: MyApp\n" +
+                "  por";
+
+        when(document.get()).thenReturn(testData);
+
+        ICompletionProposal[] proposals = underTest.computeCompletionProposals(viewer, testData.length() - 1);
+
+        assertEquals("ports", proposals[0].getDisplayString());
+    }
+
+    @Test
+    public void testServicePortWithWindowsLineEndings() {
+        String testData = "" +
+                "apiVersion: v1\r\n" +
+                "kind: Service\r\n" +
+                "metadata:\r\n" +
+                "  name: my-service\r\n" +
+                "spec:\r\n" +
+                "  selector:\r\n" +
+                "    app: MyApp\r\n" +
                 "  por";
 
         when(document.get()).thenReturn(testData);

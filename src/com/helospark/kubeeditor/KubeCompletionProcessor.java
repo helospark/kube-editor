@@ -7,6 +7,7 @@ import static com.helospark.kubeeditor.YamlTools.isComment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,10 @@ import org.eclipse.jface.text.templates.TemplateCompletionProcessor;
 import org.eclipse.jface.text.templates.TemplateContextType;
 import org.eclipse.swt.graphics.Image;
 
+import com.helospark.kubeeditor.util.PreprocessedString;
+import com.helospark.kubeeditor.util.StringPreprocessor;
+import com.helospark.kubeeditor.valueprovider.StaticValueProviderList;
+
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.Schema;
@@ -26,17 +31,17 @@ import io.swagger.v3.oas.models.media.Schema;
 public class KubeCompletionProcessor extends TemplateCompletionProcessor {
 
     @Override
-    public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offsetInput) {
+    public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int originalOffsetWithoutModification) {
         List<ICompletionProposal> result = new ArrayList<>();
 
-        String content = viewer.getDocument().get();
+        int originalOffset = originalOffsetWithoutModification - 1;
 
-        int offset;
-        if (offsetInput >= content.length()) {
-            offset = content.length() - 1;
-        } else {
-            offset = offsetInput - 1;
-        }
+        String contentToModify = viewer.getDocument().get();
+
+        PreprocessedString preprocessedString = StringPreprocessor.preprocess(contentToModify, originalOffset);
+        String content = preprocessedString.content;
+
+        int offset = preprocessedString.simpleOffset;
 
         // Not really a perfect solution (ex. multiline not handled), but will be good enough here 
 
@@ -52,25 +57,33 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
         Optional<String> kind = YamlTools.findKind(content, offset);
 
         if (YamlTools.isEmptyLine(content, offset)) {
-            result.add(createTemplateCustom(offset, "Create deployment", "deployment-template.yaml", YamlTools.getCurrentLine(content, offset), content));
-            result.add(createTemplateCustom(offset, "Service deployment", "service-template.yaml", YamlTools.getCurrentLine(content, offset), content));
-            result.add(createTemplateCustom(offset, "Ingress deployment", "ingress-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Deployment template", "deployment-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Service template", "service-template.yaml", YamlTools.getCurrentLine(content, offset), content));
+            result.add(createTemplateCustom(offset, originalOffset, "Ingress template", "ingress-template.yaml", YamlTools.getCurrentLine(content, offset), content));
         }
 
         Optional<String> currentKey = YamlTools.currentKey(content, offset);
         Optional<String> currentValue = YamlTools.currentValue(content, offset);
+        String valueOrEmptyString = currentValue.orElse("");
         Optional<Integer> currentSpaces = YamlTools.currentSpaces(content, offset);
         if (!isValue) {
             if (!apiVersion.isPresent()) {
-                result.add(createProposalCustom(offset, "kind", "kind: ",
+                result.add(createProposalCustom(originalOffset, "kind", "kind: ",
                         "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
                         currentKey.orElse("")));
             }
             if (!kind.isPresent()) {
-                result.add(createProposalCustom(offset, "apiVersion", "apiVersion: apps/v1\n",
+                result.add(createProposalCustom(originalOffset, "apiVersion", "apiVersion: apps/v1\n",
                         "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
                         currentKey.orElse("")));
             }
+        }
+
+        if (isValue) {
+            result.addAll(StaticValueProviderList.validValues(path, currentValue)
+                    .stream()
+                    .map(a -> createProposalCustom(originalOffset, a, a, a, valueOrEmptyString))
+                    .collect(Collectors.toList()));
         }
 
         Optional<Schema> optionalSchema = YamlTools.findSchemaForPath(path, content, offset);
@@ -79,14 +92,13 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
             Schema schema = optionalSchema.get();
             if (isValue) {
                 String type = optionalSchema.get().getType();
-                String valueOrEmptyString = currentValue.orElse("");
 
                 if (type.equals("boolean")) {
                     if ("true".startsWith(valueOrEmptyString)) {
-                        result.add(createProposalCustom(offset, "true", " true", "true", valueOrEmptyString));
+                        result.add(createProposalCustom(originalOffset, "true", " true", "true", valueOrEmptyString));
                     }
                     if ("false".startsWith(valueOrEmptyString)) {
-                        result.add(createProposalCustom(offset, "false", " false", "false", valueOrEmptyString));
+                        result.add(createProposalCustom(originalOffset, "false", " false", "false", valueOrEmptyString));
                     }
                 }
 
@@ -101,15 +113,22 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
                             String postFix;
                             if (offset < content.length() - 1 && content.charAt(offset + 1) == ':') {
                                 postFix = "";
-                            } else if (a.getValue().get$ref() != null || a.getValue() instanceof ArraySchema || a.getValue() instanceof MapSchema) {
+                            } else if (a.getValue().get$ref() != null || a.getValue() instanceof MapSchema) {
                                 postFix = ":\n";
                                 for (int i = 0; i < currentSpaces.map(b -> b + 2).orElse(2); ++i) {
                                     postFix += " ";
                                 }
+                            } else if (a.getValue() instanceof ArraySchema) {
+                                postFix = ":\n";
+                                for (int i = 0; i < currentSpaces.orElse(0); ++i) {
+                                    postFix += " ";
+                                }
+                                postFix += " - ";
                             } else {
                                 postFix = ": ";
                             }
-                            return createProposalCustom(offset, a.getKey(), a.getKey() + postFix, a.getValue().getDescription() + "\n\nname: " + a.getKey() + "\ntype: " + a.getValue().getType(),
+                            return createProposalCustom(originalOffset, a.getKey(), a.getKey() + postFix,
+                                    createDescription(a),
                                     currentKey.orElse(""));
                         })
                         .collect(Collectors.toList()));
@@ -119,7 +138,23 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
         return result.toArray(new ICompletionProposal[0]);
     }
 
-    private ICompletionProposal createTemplateCustom(final int offset, final String title, final String filename, final String whatToReplace, String content) {
+    private String createDescription(Entry<String, Schema> a) {
+        String result = "";
+
+        if (a.getValue().getDescription() != null) {
+            result += a.getValue().getDescription();
+        }
+
+        result += "\n\nname: " + a.getKey();
+
+        if (a.getValue().getType() != null) {
+            result += "\ntype: " + a.getValue().getType();
+        }
+
+        return result;
+    }
+
+    private ICompletionProposal createTemplateCustom(int offset, int originalOffset, String title, String filename, String whatToReplace, String content) {
         boolean beforePosition = YamlTools.isNewDocumentBeforePosition(content, offset);
         boolean afterPosition = YamlTools.isNewDocumentAfterPosition(content, offset);
 
@@ -133,7 +168,7 @@ public class KubeCompletionProcessor extends TemplateCompletionProcessor {
             newReplacement = replacement + "\n---\n";
         }
 
-        return createProposalCustom(offset, title, newReplacement, title + "\n" + replacement, whatToReplace);
+        return createProposalCustom(originalOffset, title, newReplacement, title + "\n" + replacement, whatToReplace);
     }
 
     private ICompletionProposal createProposalCustom(final int offset, final String title, final String replacement, final String description, final String whatToReplace) {

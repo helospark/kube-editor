@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.dadacoalition.yedit.YEditLog;
 import org.dadacoalition.yedit.editor.YEdit;
@@ -28,13 +29,18 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.PartInitException;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.MappingNode;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.NodeTuple;
 import org.yaml.snakeyaml.nodes.ScalarNode;
 import org.yaml.snakeyaml.nodes.SequenceNode;
+
+import com.helospark.kubeeditor.validator.StaticValidatorList;
+import com.helospark.kubeeditor.valueprovider.StaticValueProviderList;
 
 import io.swagger.v3.oas.models.media.Schema;
 
@@ -48,6 +54,12 @@ public class KubeEditor extends YEdit {
     @Override
     protected YEditSourceViewerConfiguration createSourceViewerConfiguration() {
         return new KubeEditSourceViewerConfiguration();
+    }
+
+    @Override
+    public void init(IEditorSite site, IEditorInput input) throws PartInitException {
+        super.init(site, input);
+        markErrors();
     }
 
     @Override
@@ -79,17 +91,19 @@ public class KubeEditor extends YEdit {
             if (PreferenceConstants.SYNTAX_VALIDATION_WARNING.equals(severity))
                 markerSeverity = IMarker.SEVERITY_WARNING;
 
-            Map<Integer, String> errors = getErrors();
+            Map<Integer, List<String>> errors = getErrors();
 
-            for (Map.Entry<Integer, String> entry : errors.entrySet()) {
-                IMarker marker;
-                try {
-                    marker = file.createMarker(IMarker.PROBLEM);
-                    marker.setAttribute(IMarker.SEVERITY, markerSeverity);
-                    marker.setAttribute(IMarker.MESSAGE, entry.getValue());
-                    marker.setAttribute(IMarker.LINE_NUMBER, entry.getKey());
-                } catch (CoreException e) {
-                    e.printStackTrace();
+            for (Map.Entry<Integer, List<String>> entry : errors.entrySet()) {
+                if (entry.getValue().size() > 0) {
+                    IMarker marker;
+                    try {
+                        marker = file.createMarker(IMarker.PROBLEM);
+                        marker.setAttribute(IMarker.SEVERITY, markerSeverity);
+                        marker.setAttribute(IMarker.MESSAGE, entry.getValue().stream().collect(Collectors.joining("\n")));
+                        marker.setAttribute(IMarker.LINE_NUMBER, entry.getKey());
+                    } catch (CoreException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -98,55 +112,48 @@ public class KubeEditor extends YEdit {
 
     }
 
-    private Map<Integer, String> getErrors() {
+    private Map<Integer, List<String>> getErrors() {
         IDocument document = this.getDocumentProvider().getDocument(this.getEditorInput());
         String content = document.get();
 
         Yaml yamlParser = new Yaml();
-        Map<Integer, String> result = new HashMap<>();
+        Map<Integer, List<String>> result = new HashMap<>();
         for (Node element : yamlParser.composeAll(new StringReader(content))) {
-            result.putAll(getErrorsFromDocument(element));
+            putAll(result, (getErrorsFromDocument(element)));
         }
 
         return result;
     }
 
-    private Map<? extends Integer, ? extends String> getErrorsFromDocument(Node element) {
+    private Map<Integer, List<String>> getErrorsFromDocument(Node element) {
         MappingNode mappingElement = (MappingNode) element;
-        //
         Optional<String> apiVersion = findScalarElement(mappingElement, "apiVersion");
         Optional<String> kind = findScalarElement(mappingElement, "kind");
-        //
-        //        Optional<String> schemaDescriptor = YamlTools.getSchemaDescriptor(apiVersion.get(), kind.get());
-        //
-        //        if (schemaDescriptor.isPresent()) {
-        //            Schema schema = api.getComponents().getSchemas().get(schemaDescriptor.get());
-        //        }
 
         List<String> path = new ArrayList<>();
 
         return recursiveGetErrorsFromDocument(element, path, apiVersion, kind);
     }
 
-    private Map<Integer, String> recursiveGetErrorsFromDocument(Node element, List<String> path, Optional<String> apiVersion, Optional<String> kind) {
-        Map<Integer, String> result = new HashMap<>();
+    private Map<Integer, List<String>> recursiveGetErrorsFromDocument(Node element, List<String> path, Optional<String> apiVersion, Optional<String> kind) {
+        Map<Integer, List<String>> result = new HashMap<>();
         if (element instanceof ScalarNode) {
             Optional<Schema> value = YamlTools.findSchemaForPath(path, apiVersion, kind);
             if (value.isPresent()) {
-                Optional<String> errorMessage = getErrorMessage(value.get().getType(), ((ScalarNode) element));
+                List<String> errorMessage = getErrorMessage(value.get().getType(), ((ScalarNode) element), path);
 
-                if (errorMessage.isPresent()) {
-                    return Collections.singletonMap(element.getStartMark().getLine() + 1, errorMessage.get());
-                }
+                return Collections.singletonMap(element.getStartMark().getLine() + 1, errorMessage);
             }
         } else if (element instanceof MappingNode) {
             for (NodeTuple a : ((MappingNode) element).getValue()) {
                 if (a.getKeyNode() instanceof ScalarNode) {
                     path.add(((ScalarNode) a.getKeyNode()).getValue());
 
-                    result.putAll(recursiveGetErrorsFromDocument(a.getValueNode(), path, apiVersion, kind));
+                    putAll(result, (recursiveGetErrorsFromDocument(a.getValueNode(), path, apiVersion, kind)));
 
                     path.remove(path.size() - 1);
+                } else {
+                    putAll(result, (recursiveGetErrorsFromDocument(a.getValueNode(), path, apiVersion, kind)));
                 }
             }
         } else if (element instanceof SequenceNode) {
@@ -154,9 +161,11 @@ public class KubeEditor extends YEdit {
                 if (a instanceof ScalarNode) {
                     path.add((((ScalarNode) a).getValue()));
 
-                    result.putAll(recursiveGetErrorsFromDocument(a, path, apiVersion, kind));
+                    putAll(result, (recursiveGetErrorsFromDocument(a, path, apiVersion, kind)));
 
                     path.remove(path.size() - 1);
+                } else {
+                    putAll(result, (recursiveGetErrorsFromDocument(a, path, apiVersion, kind)));
                 }
             }
         }
@@ -164,19 +173,32 @@ public class KubeEditor extends YEdit {
         return result;
     }
 
-    private Optional<String> getErrorMessage(String type, ScalarNode scalarNode) {
-        if (type.equals("boolean")) {
-            if (!(scalarNode.getValue().equals("true") || scalarNode.getValue().equals("false"))) {
-                return Optional.of("Boolean value expected");
-            }
-        } else if (type.equals("integer")) {
-            try {
-                Integer.parseInt(scalarNode.getValue());
-            } catch (NumberFormatException e) {
-                return Optional.of("Integer value expected");
+    private void putAll(Map<Integer, List<String>> result, Map<Integer, List<String>> map) {
+        for (Map.Entry<Integer, List<String>> entry : map.entrySet()) {
+            List<String> toUpdate = result.get(entry.getKey());
+            if (toUpdate == null) {
+                result.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            } else {
+                toUpdate.addAll(entry.getValue());
             }
         }
-        return Optional.empty();
+    }
+
+    private List<String> getErrorMessage(String type, ScalarNode scalarNode, List<String> path) {
+        List<String> validationMessages = new ArrayList<>(StaticValidatorList.getValidationMessage(type, scalarNode, path));
+
+        List<String> validValuesForField = StaticValueProviderList.validValues(path, Optional.empty());
+        String currentValue = scalarNode.getValue();
+        Boolean isValid = validValuesForField.stream()
+                .filter(a -> a.equals(currentValue))
+                .findFirst()
+                .map(a -> true)
+                .orElse(false);
+        if (!isValid && !validValuesForField.isEmpty()) {
+            validationMessages.add("Invalid value, list of valid values: " + validValuesForField);
+        }
+
+        return validationMessages;
     }
 
     private Optional<String> findScalarElement(MappingNode mappingElement, String string) {

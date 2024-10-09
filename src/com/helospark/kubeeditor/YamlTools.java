@@ -129,6 +129,9 @@ public class YamlTools {
         if (nextIndex == -1) {
             nextIndex = content.length();
         }
+        if (prevIndex == -1) {
+            prevIndex = 0;
+        }
         if (content.length() == 0) {
             return true;
         }
@@ -280,7 +283,6 @@ public class YamlTools {
                         schema = (Schema) newElement;
                     } else {
                         schema = (Schema) newElement;
-                        System.out.println("Cannot proceed with " + pathElement);
                         break;
                     }
                 }
@@ -351,7 +353,7 @@ public class YamlTools {
         if (lastLineStartPosition == -1) {
             return true;
         }
-        String lastLine = content.substring(lastLineStartPosition, nextNewLineLocation);
+        String lastLine = content.substring(nextNewLineLocation, lastLineStartPosition);
         return lastLine.startsWith("---") || lastLine.startsWith("...");
     }
 

@@ -705,6 +705,7 @@ public class SchemaList {
         triplets.add(new Triplet("v1", "HTTPIngressPath", "io.k8s.api.networking.v1beta1.HTTPIngressPath"));
         triplets.add(new Triplet("v1", "HTTPIngressRuleValue", "io.k8s.api.networking.v1beta1.HTTPIngressRuleValue"));
         triplets.add(new Triplet("v1", "Ingress", "io.k8s.api.networking.v1beta1.Ingress"));
+        triplets.add(new Triplet("extensions/v1beta1", "Ingress", "io.k8s.api.networking.v1beta1.Ingress"));
         triplets.add(new Triplet("v1", "IngressBackend", "io.k8s.api.networking.v1beta1.IngressBackend"));
         triplets.add(new Triplet("v1", "IngressList", "io.k8s.api.networking.v1beta1.IngressList"));
         triplets.add(new Triplet("v1", "IngressRule", "io.k8s.api.networking.v1beta1.IngressRule"));

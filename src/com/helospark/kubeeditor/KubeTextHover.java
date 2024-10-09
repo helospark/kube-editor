@@ -19,6 +19,9 @@ import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Region;
 import org.eclipse.swt.widgets.Shell;
 
+import com.helospark.kubeeditor.util.PreprocessedString;
+import com.helospark.kubeeditor.util.StringPreprocessor;
+
 import io.swagger.v3.oas.models.media.Schema;
 
 public class KubeTextHover implements ITextHover, ITextHoverExtension, ITextHoverExtension2 {
@@ -35,14 +38,12 @@ public class KubeTextHover implements ITextHover, ITextHoverExtension, ITextHove
 
     @Override
     public Object getHoverInfo2(ITextViewer viewer, IRegion region) {
-        String content = viewer.getDocument().get();
+        String contentToModify = viewer.getDocument().get();
 
-        int offset;
-        if (region.getOffset() >= content.length()) {
-            offset = content.length() - 1;
-        } else {
-            offset = region.getOffset();
-        }
+        PreprocessedString preprocessedString = StringPreprocessor.preprocess(contentToModify, region.getOffset());
+        String content = preprocessedString.content;
+
+        int offset = preprocessedString.simpleOffset;
 
         if (isComment(content, offset)) {
             return null;
