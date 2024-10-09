@@ -3,5 +3,5 @@
    <description name="Kubernetes manifest editor" url="https://raw.githubusercontent.com/helospark/eclipse-update-site/refs/heads/main/KubeEditUpdateSite">
       Kubernetes manifest editor
    </description>
-   <feature url="features/com.helospark.KubeEditorFeature_0.0.2.202410091648.jar" id="com.helospark.KubeEditorFeature" version="0.0.2.202410091648"/>
+   <feature url="features/com.helospark.KubeEditorFeature_0.0.3.202410092007.jar" id="com.helospark.KubeEditorFeature" version="0.0.3.202410092007"/>
 </site>
